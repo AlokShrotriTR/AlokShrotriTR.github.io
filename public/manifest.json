@@ -27,8 +27,8 @@
     {
       "entityId": "incidentForm",
       "name": "Incident Form",
-      "contentUrl": "https://AlokShrotriTR.github.io/ACTR/index.html",
-      "websiteUrl": "https://AlokShrotriTR.github.io/ACTR/index.html",
+      "contentUrl": "https://AlokShrotriTR.github.io/ACTR/public/index.html",
+      "websiteUrl": "https://AlokShrotriTR.github.io/ACTR/public/index.html",
       "scopes": ["personal"]
     }
   ],

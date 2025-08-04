@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTR - Incident Tracker</title>
+    <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #0078D7;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #323130;
+        }
+        .input-container {
+            position: relative;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
+        input[type="text"]:focus {
+            border-color: #0078D7;
+            outline: none;
+        }
+        input[type="text"].error {
+            border-color: #d83b01;
+        }
+        .error-message {
+            color: #d83b01;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .format-hint {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 5px;
+        }
+        .submit-btn {
+            background-color: #0078D7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .submit-btn:hover {
+            background-color: #106ebe;
+        }
+        .submit-btn:disabled {
+            background-color: #a19f9d;
+            cursor: not-allowed;
+        }
+        .success-message {
+            background-color: #107c10;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+        .incident-details {
+            background-color: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+        .incident-title {
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .incident-info {
+            font-size: 14px;
+            color: #605e5c;
+            margin-bottom: 20px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-secondary {
+            background-color: #f3f2f1;
+            color: #323130;
+            border: 1px solid #e1dfdd;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-secondary:hover {
+            background-color: #e1dfdd;
+        }
+        .btn-primary {
+            background-color: #0078D7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background-color: #106ebe;
+        }
+        .loading {
+            text-align: center;
+            color: #0078D7;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ACTR</h1>
+            <p>Incident Number Tracker</p>
+        </div>
+        
+        <form id="incidentForm">
+            <div class="form-group">
+                <label for="incidentNumber">Incident Number</label>
+                <div class="input-container">
+                    <input 
+                        type="text" 
+                        id="incidentNumber" 
+                        name="incidentNumber" 
+                        placeholder="INC1234567"
+                        maxlength="10"
+                        autocomplete="off"
+                    >
+                    <div class="error-message" id="errorMessage">
+                        Please enter a valid incident number (INC followed by 7 digits)
+                    </div>
+                    <div class="format-hint">
+                        Format: INC followed by 7 digits (e.g., INC1234567)
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Lookup Incident
+            </button>
+        </form>
+        
+        <div class="success-message" id="successMessage">
+            Incident found successfully!
+        </div>
+        
+        <div class="incident-details" id="incidentDetails">
+            <div class="incident-title" id="incidentTitle"></div>
+            <div class="incident-info" id="incidentInfo"></div>
+            <div class="action-buttons">
+                <button type="button" class="btn-secondary" id="newSearchBtn">
+                    Search Another Incident
+                </button>
+                <button type="button" class="btn-primary" id="doneBtn">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Microsoft Teams with error handling
+        let isTeamsContext = false;
+        
+        microsoftTeams.app.initialize().then(() => {
+            console.log('Teams app initialized successfully');
+            isTeamsContext = true;
+        }).catch((error) => {
+            console.log('Not running in Teams context:', error.message);
+            console.log('App will work in standalone mode');
+            isTeamsContext = false;
+        });
+
+        // Form validation and submission
+        const form = document.getElementById('incidentForm');
+        const input = document.getElementById('incidentNumber');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const incidentDetails = document.getElementById('incidentDetails');
+        const incidentTitle = document.getElementById('incidentTitle');
+        const incidentInfo = document.getElementById('incidentInfo');
+        const newSearchBtn = document.getElementById('newSearchBtn');
+        const doneBtn = document.getElementById('doneBtn');
+
+        // ServiceNow Configuration - UPDATE THESE VALUES
+        const SERVICENOW_CONFIG = {
+            instance: 'https://dev279775.service-now.com', // Replace with your ServiceNow instance
+            username: 'admin', // Replace with your username  
+            password: 'x{?Gktp(@n>932KeG)w{0Ix{eJnEFW{_cN)*[-Fvd)3>y&vu^14Ljp4E_Y@uI=+b}z7oTRh>hIB8Ef2u2w}=)lxNHE',  // Replace with your password
+            testMode: true // Set to false when ServiceNow is configured properly
+        };
+
+        // Incident number validation pattern: INC followed by 7 digits
+        const incidentPattern = /^INC\d{7}$/;
+
+        function validateIncidentNumber(value) {
+            return incidentPattern.test(value);
+        }
+
+        function showError(message) {
+            input.classList.add('error');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function hideError() {
+            input.classList.remove('error');
+            errorMessage.style.display = 'none';
+        }
+
+        function showSuccess() {
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function hideIncidentDetails() {
+            incidentDetails.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        function showIncidentDetails(title, number, state) {
+            console.log('showIncidentDetails called with:', { title, number, state });
+            console.log('incidentTitle element:', incidentTitle);
+            console.log('incidentInfo element:', incidentInfo);
+            console.log('incidentDetails element:', incidentDetails);
+            
+            incidentTitle.textContent = `Title: ${title}`;
+            incidentInfo.textContent = `Incident Number: ${number} | Status: ${state || 'Unknown'}`;
+            
+            console.log('Set incidentTitle.textContent to:', incidentTitle.textContent);
+            console.log('Set incidentInfo.textContent to:', incidentInfo.textContent);
+            
+            incidentDetails.style.display = 'block';
+            console.log('Set incidentDetails.style.display to block');
+            
+            // Hide the form when showing results
+            document.getElementById('incidentForm').style.display = 'none';
+            console.log('Hidden the form');
+            
+            // Hide the success message as it's not needed
+            successMessage.style.display = 'none';
+            console.log('Hidden success message');
+        }
+
+        function resetForm() {
+            // Clear input and errors
+            input.value = '';
+            hideError();
+            hideIncidentDetails();
+            
+            // Show the form again
+            document.getElementById('incidentForm').style.display = 'block';
+            
+            // Focus on input for better UX
+            input.focus();
+        }
+
+        // ServiceNow API call function
+        async function getIncidentFromServiceNow(incidentNumber) {
+            // Test mode - return mock data for testing
+            if (SERVICENOW_CONFIG.testMode) {
+                console.log('Running in test mode - returning mock data');
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            title: `Sample incident title for ${incidentNumber}`,
+                            success: true,
+                            state: 'Open',
+                            number: incidentNumber
+                        });
+                    }, 1000); // Simulate API delay
+                });
+            }
+
+            try {
+                const url = `${SERVICENOW_CONFIG.instance}/api/now/table/incident?sysparm_query=number=${incidentNumber}&sysparm_fields=short_description,number,state`;
+                const credentials = btoa(`${SERVICENOW_CONFIG.username}:${SERVICENOW_CONFIG.password}`);
+                
+                console.log('Making API call to:', url);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Basic ${credentials}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response data:', data);
+                
+                if (data.result && data.result.length > 0) {
+                    const incident = data.result[0];
+                    console.log('Found incident:', incident);
+                    return {
+                        title: incident.short_description || 'No title available',
+                        success: true,
+                        state: incident.state,
+                        number: incident.number
+                    };
+                } else {
+                    console.log('No incident found in response');
+                    return {
+                        title: '',
+                        success: false,
+                        error: 'Incident not found'
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching incident from ServiceNow:', error);
+                return {
+                    title: '',
+                    success: false,
+                    error: `Failed to fetch incident: ${error.message}`
+                };
+            }
+        }
+
+        // Real-time validation
+        input.addEventListener('input', function(e) {
+            const value = e.target.value.toUpperCase();
+            e.target.value = value;
+            
+            if (value.length === 0) {
+                hideError();
+                hideIncidentDetails();
+                return;
+            }
+            
+            if (validateIncidentNumber(value)) {
+                hideError();
+            } else {
+                showError('Please enter a valid incident number (INC followed by 7 digits)');
+                hideIncidentDetails();
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const incidentNumber = input.value.trim().toUpperCase();
+            
+            if (!incidentNumber) {
+                showError('Please enter an incident number');
+                hideIncidentDetails();
+                return;
+            }
+            
+            if (!validateIncidentNumber(incidentNumber)) {
+                showError('Please enter a valid incident number (INC followed by 7 digits)');
+                hideIncidentDetails();
+                return;
+            }
+            
+            // Hide previous results
+            hideError();
+            hideIncidentDetails();
+            
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Looking up incident...';
+            
+            try {
+                // Call ServiceNow API
+                const result = await getIncidentFromServiceNow(incidentNumber);
+                
+                if (result.success) {
+                    console.log('About to show incident details with:', result);
+                    alert(`Found incident: ${result.title}`); // Temporary alert for debugging
+                    showIncidentDetails(result.title, result.number, result.state);
+                    console.log('Incident found:', result);
+                } else {
+                    console.log('API call failed:', result);
+                    showError(result.error || 'Incident not found');
+                }
+            } catch (error) {
+                console.error('Error during incident lookup:', error);
+                showError('Failed to lookup incident. Please try again.');
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Lookup Incident';
+            }
+        });
+
+        // Button event listeners
+        newSearchBtn.addEventListener('click', function() {
+            resetForm();
+        });
+
+        doneBtn.addEventListener('click', function() {
+            // Optional: Close the Teams tab or show completion message
+            if (isTeamsContext && typeof microsoftTeams !== 'undefined') {
+                // You can add Teams-specific functionality here
+                console.log('User completed incident lookup in Teams');
+            } else {
+                console.log('User completed incident lookup in standalone mode');
+            }
+            
+            // Show a completion message
+            alert('Thank you for using ACTR Incident Tracker!');
+            resetForm();
+        });
+
+        // Auto-format input
+        input.addEventListener('keypress', function(e) {
+            const value = e.target.value;
+            const char = e.key;
+            
+            // Allow backspace, delete, tab, escape, enter
+            if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+                // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                (e.keyCode === 65 && e.ctrlKey === true) ||
+                (e.keyCode === 67 && e.ctrlKey === true) ||
+                (e.keyCode === 86 && e.ctrlKey === true) ||
+                (e.keyCode === 88 && e.ctrlKey === true)) {
+                return;
+            }
+            
+            // If we're at the beginning and it's not 'I', prevent
+            if (value.length === 0 && char.toUpperCase() !== 'I') {
+                e.preventDefault();
+                return;
+            }
+            
+            // If we're at position 1 and it's not 'N', prevent
+            if (value.length === 1 && char.toUpperCase() !== 'N') {
+                e.preventDefault();
+                return;
+            }
+            
+            // If we're at position 2 and it's not 'C', prevent
+            if (value.length === 2 && char.toUpperCase() !== 'C') {
+                e.preventDefault();
+                return;
+            }
+            
+            // After INC, only allow digits
+            if (value.length >= 3 && !/\d/.test(char)) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Limit to 10 characters total
+            if (value.length >= 10) {
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

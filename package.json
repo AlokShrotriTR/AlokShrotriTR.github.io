@@ -1,0 +1,32 @@
+{
+  "name": "ACTR",
+  "version": "1.0.0",
+  "description": "A Microsoft Teams app for incident reporting.",
+  "main": "src/app.ts",
+  "scripts": {
+    "start": "ts-node src/app.ts",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@microsoft/teams-js": "^2.0.0",
+    "http-server": "^14.1.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "@types/react": "^17.0.39",
+    "@types/react-dom": "^17.0.11",
+    "jest": "^27.0.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.4"
+  },
+  "keywords": [
+    "Microsoft Teams",
+    "incident reporting",
+    "React"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

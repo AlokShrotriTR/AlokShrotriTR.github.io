@@ -1,0 +1,37 @@
+{
+  "manifestVersion": "1.0",
+  "version": "1.0.0",
+  "id": "ACTR",
+  "packageName": "com.example.actr",
+  "developer": {
+    "name": "Your Name",
+    "websiteUrl": "https://yourwebsite.com",
+    "privacyUrl": "https://yourwebsite.com/privacy",
+    "termsOfUseUrl": "https://yourwebsite.com/terms"
+  },
+  "name": {
+    "short": "ACTR",
+    "full": "Incident Number Tracker"
+  },
+  "description": {
+    "short": "A Microsoft Teams app for tracking incident numbers.",
+    "full": "ACTR is a Microsoft Teams application that allows users to input and track incident numbers in a specified format."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#0078D7",
+  "configurableTabs": [],
+  "staticTabs": [
+    {
+      "entityId": "incidentForm",
+      "name": "Incident Form",
+      "contentUrl": "https://yourusername.github.io/ACTR/index.html",
+      "websiteUrl": "https://yourusername.github.io/ACTR/index.html",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["yourusername.github.io"]
+}

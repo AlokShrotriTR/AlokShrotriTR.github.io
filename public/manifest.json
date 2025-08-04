@@ -27,11 +27,11 @@
     {
       "entityId": "incidentForm",
       "name": "Incident Form",
-      "contentUrl": "https://yourusername.github.io/ACTR/public/index.html",
-      "websiteUrl": "https://yourusername.github.io/ACTR/public/index.html",
+      "contentUrl": "https://AlokShrotriTR.github.io/ACTR/public/index.html",
+      "websiteUrl": "https://AlokShrotriTR.github.io/ACTR/public/index.html",
       "scopes": ["personal"]
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
-  "validDomains": ["yourusername.github.io"]
+  "validDomains": ["AlokShrotriTR.github.io"]
 }

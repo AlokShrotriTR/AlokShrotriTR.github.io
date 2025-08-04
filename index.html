@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACTR - Incident Tracker</title>
     <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    <script src="teams-integration.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -77,6 +78,10 @@
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
+            min-height: 44px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .submit-btn:hover {
             background-color: #106ebe;
@@ -93,13 +98,127 @@
             margin-top: 20px;
             display: none;
         }
+        .incident-details {
+            background-color: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+        .incident-title {
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .incident-info {
+            font-size: 14px;
+            color: #605e5c;
+            margin-bottom: 20px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-secondary {
+            background-color: #f3f2f1;
+            color: #323130;
+            border: 1px solid #e1dfdd;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-secondary:hover {
+            background-color: #e1dfdd;
+        }
+        .btn-primary {
+            background-color: #0078D7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background-color: #106ebe;
+        }
+        .loading {
+            text-align: center;
+            color: #0078D7;
+            font-style: italic;
+        }
+        .confirmation-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1dfdd;
+        }
+        .confirmation-text {
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .meeting-creation {
+            text-align: center;
+            padding: 30px;
+            margin-top: 20px;
+            border-top: 1px solid #e1dfdd;
+        }
+        .loading-message {
+            color: #0078D7;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0078D7;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .meeting-success {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f3f9fc;
+            border: 1px solid #0078D7;
+            border-radius: 4px;
+        }
+        .success-content h3 {
+            color: #107c10;
+            margin-bottom: 10px;
+        }
+        .meeting-details {
+            background-color: #fff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            border: 1px solid #e1dfdd;
+        }
+        .meeting-link {
+            word-break: break-all;
+            color: #0078D7;
+            text-decoration: none;
+        }
+        .meeting-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>ACTR</h1>
-            <p>Incident Number Tracker</p>
+            <p>Incident Number Tracker - Updated Version</p>
         </div>
         
         <form id="incidentForm">
@@ -124,20 +243,78 @@
             </div>
             
             <button type="submit" class="submit-btn" id="submitBtn">
-                Submit Incident Number
+                Lookup
             </button>
         </form>
         
         <div class="success-message" id="successMessage">
-            Incident number submitted successfully!
+            Incident found successfully!
+        </div>
+        
+        <div class="incident-details" id="incidentDetails">
+            <div class="incident-title" id="incidentTitle"></div>
+            <div class="incident-info" id="incidentInfo"></div>
+            <div class="confirmation-section" id="confirmationSection">
+                <p class="confirmation-text">Is this the correct incident you want to create a Teams meeting for?</p>
+                <div class="action-buttons">
+                    <button type="button" class="btn-secondary" id="cancelBtn">
+                        No, Search Again
+                    </button>
+                    <button type="button" class="btn-primary" id="confirmBtn">
+                        Yes, Create Meeting
+                    </button>
+                </div>
+            </div>
+            <div class="meeting-creation" id="meetingCreation" style="display: none;">
+                <div class="loading-message">
+                    <p>Creating Teams meeting and updating incident...</p>
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            <div class="meeting-success" id="meetingSuccess" style="display: none;">
+                <div class="success-content">
+                    <h3>✅ Meeting Created Successfully!</h3>
+                    <p>Teams meeting has been created and incident has been updated.</p>
+                    <div class="meeting-details" id="meetingDetails"></div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-primary" id="joinMeetingBtn">
+                            Join Meeting Now
+                        </button>
+                        <button type="button" class="btn-secondary" id="doneBtn">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Initialize Microsoft Teams
-        microsoftTeams.app.initialize().then(() => {
-            console.log('Teams app initialized');
-        });
+        // Initialize Microsoft Teams with error handling
+        let isTeamsContext = false;
+        
+        // Try to initialize Teams integration
+        async function initializeTeams() {
+            try {
+                if (TEAMS_CONFIG.useRealTeams && teamsIntegration) {
+                    // Use real Teams integration
+                    isTeamsContext = await teamsIntegration.initialize();
+                    console.log('Real Teams integration initialized:', isTeamsContext);
+                } else {
+                    // Fallback to basic Teams SDK
+                    await microsoftTeams.app.initialize();
+                    console.log('Teams app initialized successfully');
+                    isTeamsContext = true;
+                }
+            } catch (error) {
+                console.log('Not running in Teams context:', error.message);
+                console.log('App will work in standalone mode');
+                isTeamsContext = false;
+            }
+        }
+
+        // Initialize on page load
+        initializeTeams();
 
         // Form validation and submission
         const form = document.getElementById('incidentForm');
@@ -145,6 +322,35 @@
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
         const submitBtn = document.getElementById('submitBtn');
+        const incidentDetails = document.getElementById('incidentDetails');
+        const incidentTitle = document.getElementById('incidentTitle');
+        const incidentInfo = document.getElementById('incidentInfo');
+        const newSearchBtn = document.getElementById('newSearchBtn');
+        const doneBtn = document.getElementById('doneBtn');
+
+        // ServiceNow Configuration - UPDATE THESE VALUES
+        const SERVICENOW_CONFIG = {
+            instance: 'https://dev279775.service-now.com', // Replace with your ServiceNow instance
+            username: 'admin', // Replace with your username  
+            password: 'x{?Gktp(@n>932KeG)w{0Ix{eJnEFW{_cN)*[-Fvd)3>y&vu^14Ljp4E_Y@uI=+b}z7oTRh>hIB8Ef2u2w}=)lxNHE',  // Replace with your password
+            testMode: false, // Set to false when ServiceNow is configured properly
+            useProxy: true, // Use local proxy server
+            proxyUrl: 'http://localhost:3001/api/incident' // Local proxy endpoint
+        };
+
+        // Teams Configuration - UPDATE THESE VALUES FOR PRODUCTION
+        const TEAMS_CONFIG = {
+            clientId: 'YOUR_AZURE_CLIENT_ID_HERE', // Azure AD App Registration Client ID
+            tenantId: 'YOUR_TENANT_ID_HERE', // Azure AD Tenant ID
+            redirectUri: window.location.origin + '/auth/callback', // Redirect URI registered in Azure AD
+            useRealTeams: false // Set to true when you have Azure AD app configured
+        };
+
+        // Initialize Teams integration
+        let teamsIntegration = null;
+        if (TEAMS_CONFIG.useRealTeams && typeof TeamsIntegration !== 'undefined') {
+            teamsIntegration = new TeamsIntegration(TEAMS_CONFIG);
+        }
 
         // Incident number validation pattern: INC followed by 7 digits
         const incidentPattern = /^INC\d{7}$/;
@@ -172,6 +378,315 @@
             }, 3000);
         }
 
+        function hideIncidentDetails() {
+            incidentDetails.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        function showIncidentDetails(title, number, state) {
+            console.log('showIncidentDetails called with:', { title, number, state });
+            
+            // Store incident data for later use
+            window.currentIncident = { title, number, state };
+            
+            incidentTitle.textContent = `Title: ${title}`;
+            incidentInfo.textContent = `Incident Number: ${number} | Status: ${state || 'Unknown'}`;
+            
+            // Show the incident details section
+            incidentDetails.style.display = 'block';
+            
+            // Hide the form when showing results
+            document.getElementById('incidentForm').style.display = 'none';
+            
+            // Show confirmation section, hide others
+            document.getElementById('confirmationSection').style.display = 'block';
+            document.getElementById('meetingCreation').style.display = 'none';
+            document.getElementById('meetingSuccess').style.display = 'none';
+            
+            // Hide the success message as it's not needed
+            successMessage.style.display = 'none';
+        }
+
+        // ServiceNow API call function
+        async function getIncidentFromServiceNow(incidentNumber) {
+            // Test mode - return mock data for testing
+            if (SERVICENOW_CONFIG.testMode) {
+                console.log('Running in test mode - returning mock data');
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            title: `Sample incident title for ${incidentNumber}`,
+                            success: true,
+                            state: 'Open',
+                            number: incidentNumber
+                        });
+                    }, 1000); // Simulate API delay
+                });
+            }
+
+            try {
+                let url;
+                let requestOptions;
+
+                if (SERVICENOW_CONFIG.useProxy) {
+                    // Use local proxy server
+                    url = `${SERVICENOW_CONFIG.proxyUrl}/${incidentNumber}`;
+                    requestOptions = {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                } else {
+                    // Use CORS proxy for testing - REMOVE IN PRODUCTION
+                    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                    url = `${proxyUrl}${SERVICENOW_CONFIG.instance}/api/now/table/incident?sysparm_query=number=${incidentNumber}&sysparm_fields=short_description,number,state,sys_id`;
+                    const credentials = btoa(`${SERVICENOW_CONFIG.username}:${SERVICENOW_CONFIG.password}`);
+                    requestOptions = {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Basic ${credentials}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    };
+                }
+                
+                console.log('Making API call to:', url);
+                
+                const response = await fetch(url, requestOptions);
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response data:', data);
+                
+                if (data.result && data.result.length > 0) {
+                    const incident = data.result[0];
+                    console.log('Found incident:', incident);
+                    return {
+                        title: incident.short_description || 'No title available',
+                        success: true,
+                        state: incident.state,
+                        number: incident.number,
+                        sys_id: incident.sys_id // Store sys_id for updates
+                    };
+                } else {
+                    console.log('No incident found in response');
+                    return {
+                        title: '',
+                        success: false,
+                        error: 'Incident not found'
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching incident from ServiceNow:', error);
+                return {
+                    title: '',
+                    success: false,
+                    error: `Failed to fetch incident: ${error.message}`
+                };
+            }
+        }
+
+        // Function to create Teams meeting
+        async function createTeamsMeeting(incidentNumber, incidentTitle) {
+            try {
+                const meetingSubject = `Incident ${incidentNumber}: ${incidentTitle}`;
+                const meetingDescription = `Teams meeting for incident ${incidentNumber}\nIncident Title: ${incidentTitle}\nCreated automatically by ACTR app`;
+
+                if (TEAMS_CONFIG.useRealTeams && teamsIntegration) {
+                    // Use real Teams integration with Graph API
+                    console.log('Creating real Teams meeting...');
+                    
+                    const meetingResult = await teamsIntegration.createOnlineMeeting(meetingSubject);
+                    
+                    if (meetingResult.success) {
+                        return {
+                            success: true,
+                            meetingUrl: meetingResult.joinUrl,
+                            meetingId: meetingResult.meetingId,
+                            subject: meetingSubject,
+                            notes: meetingDescription,
+                            isReal: true
+                        };
+                    } else {
+                        throw new Error(meetingResult.error);
+                    }
+                    
+                } else if (isTeamsContext && typeof microsoftTeams !== 'undefined') {
+                    // Use Teams deep link (works in Teams context)
+                    const deepLinkParams = new URLSearchParams({
+                        subject: meetingSubject,
+                        startTime: new Date().toISOString(),
+                        endTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                        content: meetingDescription
+                    });
+                    
+                    const meetingUrl = `https://teams.microsoft.com/l/meeting/new?${deepLinkParams}`;
+                    
+                    return {
+                        success: true,
+                        meetingUrl: meetingUrl,
+                        subject: meetingSubject,
+                        notes: meetingDescription,
+                        isReal: false,
+                        type: 'deeplink'
+                    };
+                    
+                } else {
+                    // Standalone mode - create a demo meeting link
+                    const meetingUrl = `https://teams.microsoft.com/l/meeting/demo_meeting_${Date.now()}`;
+                    
+                    return {
+                        success: true,
+                        meetingUrl: meetingUrl,
+                        subject: meetingSubject,
+                        notes: meetingDescription,
+                        isReal: false,
+                        type: 'demo'
+                    };
+                }
+            } catch (error) {
+                console.error('Error creating Teams meeting:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // Function to update ServiceNow incident with meeting link
+        async function updateIncidentWithMeeting(sys_id, meetingUrl, meetingSubject) {
+            try {
+                const currentDate = new Date().toISOString();
+                const meetingNote = `Teams Meeting Created: ${meetingSubject}\nMeeting Link: ${meetingUrl}\nCreated: ${currentDate} by ACTR App`;
+                
+                const updateData = {
+                    work_notes: meetingNote
+                };
+
+                const url = `${SERVICENOW_CONFIG.proxyUrl.replace('/api/incident', '')}/api/incident/${sys_id}`;
+                
+                console.log('Updating incident with URL:', url);
+                console.log('Update data:', updateData);
+                
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Incident updated successfully:', data);
+                
+                return {
+                    success: true,
+                    data: data
+                };
+                
+            } catch (error) {
+                console.error('Error updating incident:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // Function to handle the complete meeting creation workflow
+        async function handleMeetingCreation() {
+            const incident = window.currentIncident;
+            
+            // Show loading section
+            document.getElementById('confirmationSection').style.display = 'none';
+            document.getElementById('meetingCreation').style.display = 'block';
+            
+            try {
+                // Step 1: Create Teams meeting
+                console.log('Creating Teams meeting...');
+                const meetingResult = await createTeamsMeeting(incident.number, incident.title);
+                
+                if (!meetingResult.success) {
+                    throw new Error(`Failed to create meeting: ${meetingResult.error}`);
+                }
+                
+                console.log('Meeting created successfully:', meetingResult);
+                
+                // Step 2: Update ServiceNow incident
+                console.log('Updating ServiceNow incident...');
+                const updateResult = await updateIncidentWithMeeting(
+                    incident.sys_id, 
+                    meetingResult.meetingUrl, 
+                    meetingResult.subject
+                );
+                
+                if (!updateResult.success) {
+                    console.warn('Failed to update incident, but meeting was created:', updateResult.error);
+                }
+                
+                // Step 3: Show success message
+                showMeetingSuccess(meetingResult, updateResult.success);
+                
+            } catch (error) {
+                console.error('Error in meeting creation workflow:', error);
+                showError(`Failed to create meeting: ${error.message}`);
+                resetToForm();
+            }
+        }
+
+        // Function to show meeting success
+        function showMeetingSuccess(meetingResult, incidentUpdated) {
+            document.getElementById('meetingCreation').style.display = 'none';
+            
+            const meetingDetails = document.getElementById('meetingDetails');
+            meetingDetails.innerHTML = `
+                <p><strong>Meeting Subject:</strong> ${meetingResult.subject}</p>
+                <p><strong>Meeting Link:</strong> <a href="${meetingResult.meetingUrl}" target="_blank" class="meeting-link">${meetingResult.meetingUrl}</a></p>
+                <p><strong>Incident Update:</strong> ${incidentUpdated ? '✅ Incident notes updated successfully' : '⚠️ Meeting created but incident update failed'}</p>
+            `;
+            
+            // Store meeting URL for join button
+            window.currentMeetingUrl = meetingResult.meetingUrl;
+            
+            document.getElementById('meetingSuccess').style.display = 'block';
+        }
+
+        // Function to reset to form
+        function resetToForm() {
+            // Clear incident data
+            window.currentIncident = null;
+            window.currentMeetingUrl = null;
+            
+            // Clear input and errors
+            input.value = '';
+            hideError();
+            
+            // Hide all sections
+            incidentDetails.style.display = 'none';
+            document.getElementById('confirmationSection').style.display = 'block';
+            document.getElementById('meetingCreation').style.display = 'none';
+            document.getElementById('meetingSuccess').style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Show the form again
+            document.getElementById('incidentForm').style.display = 'block';
+            
+            // Focus on input for better UX
+            input.focus();
+        }
+
         // Real-time validation
         input.addEventListener('input', function(e) {
             const value = e.target.value.toUpperCase();
@@ -179,6 +694,7 @@
             
             if (value.length === 0) {
                 hideError();
+                hideIncidentDetails();
                 return;
             }
             
@@ -186,43 +702,107 @@
                 hideError();
             } else {
                 showError('Please enter a valid incident number (INC followed by 7 digits)');
+                hideIncidentDetails();
             }
         });
 
         // Form submission
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const incidentNumber = input.value.trim().toUpperCase();
             
             if (!incidentNumber) {
                 showError('Please enter an incident number');
+                hideIncidentDetails();
                 return;
             }
             
             if (!validateIncidentNumber(incidentNumber)) {
                 showError('Please enter a valid incident number (INC followed by 7 digits)');
+                hideIncidentDetails();
                 return;
             }
             
-            // Disable submit button temporarily
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+            // Hide previous results
+            hideError();
+            hideIncidentDetails();
             
-            // Simulate submission (replace with actual API call)
-            setTimeout(() => {
-                hideError();
-                showSuccess();
-                input.value = '';
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Loading...';
+            
+            try {
+                // Call ServiceNow API
+                const result = await getIncidentFromServiceNow(incidentNumber);
+                
+                if (result.success) {
+                    console.log('About to show incident details with:', result);
+                    showIncidentDetails(result.title, result.number, result.state);
+                    // Store sys_id for updates
+                    if (window.currentIncident) {
+                        window.currentIncident.sys_id = result.sys_id;
+                    }
+                    console.log('Incident found:', result);
+                } else {
+                    console.log('API call failed:', result);
+                    showError(result.error || 'Incident not found');
+                }
+            } catch (error) {
+                console.error('Error during incident lookup:', error);
+                showError('Failed to lookup incident. Please try again.');
+            } finally {
+                // Re-enable submit button
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Incident Number';
-                
-                // Optional: Send to Teams or external API
-                console.log('Incident submitted:', incidentNumber);
-                
-                // You can add Teams-specific functionality here
-                // microsoftTeams.app.notifySuccess();
-            }, 1000);
+                submitBtn.textContent = 'Lookup';
+            }
+        });
+
+        // Button event listeners
+        
+        // Confirm button - create meeting
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const joinMeetingBtn = document.getElementById('joinMeetingBtn');
+            const doneBtn = document.getElementById('doneBtn');
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    console.log('Confirm button clicked - creating meeting');
+                    handleMeetingCreation();
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    console.log('Cancel button clicked - returning to search');
+                    resetToForm();
+                });
+            }
+            
+            if (joinMeetingBtn) {
+                joinMeetingBtn.addEventListener('click', function() {
+                    if (window.currentMeetingUrl) {
+                        window.open(window.currentMeetingUrl, '_blank');
+                    }
+                });
+            }
+            
+            if (doneBtn) {
+                doneBtn.addEventListener('click', function() {
+                    // Optional: Close the Teams tab or show completion message
+                    if (isTeamsContext && typeof microsoftTeams !== 'undefined') {
+                        console.log('User completed incident workflow in Teams');
+                    } else {
+                        console.log('User completed incident workflow in standalone mode');
+                    }
+                    
+                    // Show a completion message
+                    alert('Thank you for using ACTR Incident Tracker!');
+                    resetToForm();
+                });
+            }
         });
 
         // Auto-format input

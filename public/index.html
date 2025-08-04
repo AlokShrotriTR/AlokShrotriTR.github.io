@@ -77,6 +77,10 @@
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
+            min-height: 44px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .submit-btn:hover {
             background-color: #106ebe;
@@ -154,7 +158,7 @@
     <div class="container">
         <div class="header">
             <h1>ACTR</h1>
-            <p>Incident Number Tracker</p>
+            <p>Incident Number Tracker - Updated Version</p>
         </div>
         
         <form id="incidentForm">
@@ -179,7 +183,7 @@
             </div>
             
             <button type="submit" class="submit-btn" id="submitBtn">
-                Lookup Incident
+                Lookup
             </button>
         </form>
         
@@ -231,7 +235,7 @@
             instance: 'https://dev279775.service-now.com', // Replace with your ServiceNow instance
             username: 'admin', // Replace with your username  
             password: 'x{?Gktp(@n>932KeG)w{0Ix{eJnEFW{_cN)*[-Fvd)3>y&vu^14Ljp4E_Y@uI=+b}z7oTRh>hIB8Ef2u2w}=)lxNHE',  // Replace with your password
-            testMode: true // Set to false when ServiceNow is configured properly
+            testMode: false // Set to false when ServiceNow is configured properly
         };
 
         // Incident number validation pattern: INC followed by 7 digits
@@ -413,7 +417,7 @@
             
             // Disable submit button and show loading
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Looking up incident...';
+            submitBtn.textContent = 'Loading...';
             
             try {
                 // Call ServiceNow API
@@ -434,7 +438,7 @@
             } finally {
                 // Re-enable submit button
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Lookup Incident';
+                submitBtn.textContent = 'Lookup';
             }
         });
 

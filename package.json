@@ -1,5 +1,5 @@
 {
-  "name": "ACTR",
+  "name": "actr",
   "version": "1.0.0",
   "description": "A Microsoft Teams app for incident reporting.",
   "main": "src/app.ts",
@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@microsoft/teams-js": "^2.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "http-server": "^14.1.1",
+    "node-fetch": "^2.7.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
@@ -28,5 +31,14 @@
     "React"
   ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlokShrotriTR/AlokShrotriTR.github.io.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AlokShrotriTR/AlokShrotriTR.github.io/issues"
+  },
+  "homepage": "https://github.com/AlokShrotriTR/AlokShrotriTR.github.io#readme"
 }

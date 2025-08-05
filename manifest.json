@@ -34,5 +34,13 @@
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
-  "validDomains": ["AlokShrotriTR.github.io"]
+  "webApplicationInfo": {
+    "id": "YOUR_CLIENT_ID_FROM_AZURE",
+    "resource": "https://graph.microsoft.com"
+  },
+  "validDomains": [
+    "AlokShrotriTR.github.io",
+    "graph.microsoft.com", 
+    "login.microsoftonline.com"
+  ]
 }

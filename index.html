@@ -338,12 +338,12 @@
             proxyUrl: 'http://localhost:3001/api/incident' // Local proxy endpoint
         };
 
-        // Teams Configuration - UPDATE THESE VALUES FOR PRODUCTION
+        // Teams Configuration - UPDATE THESE VALUES FOR M365 TESTING
         const TEAMS_CONFIG = {
-            clientId: 'YOUR_AZURE_CLIENT_ID_HERE', // Azure AD App Registration Client ID
-            tenantId: 'YOUR_TENANT_ID_HERE', // Azure AD Tenant ID
-            redirectUri: window.location.origin + '/auth/callback', // Redirect URI registered in Azure AD
-            useRealTeams: false // Set to true when you have Azure AD app configured
+            clientId: 'YOUR_AZURE_CLIENT_ID_HERE', // Get from Azure AD App Registration
+            tenantId: 'YOUR_M365_TENANT_ID_HERE', // Get from Azure AD (e.g., yourtenant.onmicrosoft.com)
+            redirectUri: window.location.origin + '/auth/callback', // Should match Azure AD redirect URI
+            useRealTeams: false // Set to true after Azure AD setup is complete
         };
 
         // Initialize Teams integration

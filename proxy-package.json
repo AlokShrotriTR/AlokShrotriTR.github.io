@@ -1,7 +1,7 @@
 {
-  "name": "actr-proxy",
+  "name": "actr-proxy-server",
   "version": "1.0.0",
-  "description": "CORS proxy for ACTR ServiceNow integration",
+  "description": "CORS proxy server for ServiceNow API access",
   "main": "proxy-server.js",
   "scripts": {
     "start": "node proxy-server.js",
@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

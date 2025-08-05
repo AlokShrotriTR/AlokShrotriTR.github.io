@@ -6,23 +6,30 @@ const fetch = require('node-fetch');
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Enable CORS for all routes
 app.use(cors());
 app.use(express.json());
+
+// ServiceNow configuration from environment variables or defaults
+const SERVICENOW_CONFIG = {
+    instance: process.env.SERVICENOW_INSTANCE || 'https://dev279775.service-now.com',
+    username: process.env.SERVICENOW_USERNAME || 'admin',
+    password: process.env.SERVICENOW_PASSWORD || 'x{?Gktp(@n>932KeG)w{0Ix{eJnEFW{_cN)*[-Fvd)3>y&vu^14Ljp4E_Y@uI=+b}z7oTRh>hIB8Ef2u2w}=)lxNHE'
+};
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 // Proxy endpoint for ServiceNow - GET incident
 app.get('/api/incident/:number', async (req, res) => {
     try {
         const incidentNumber = req.params.number;
         
-        // ServiceNow configuration
-        const SERVICENOW_CONFIG = {
-            instance: 'https://dev279775.service-now.com',
-            username: 'admin',
-            password: 'x{?Gktp(@n>932KeG)w{0Ix{eJnEFW{_cN)*[-Fvd)3>y&vu^14Ljp4E_Y@uI=+b}z7oTRh>hIB8Ef2u2w}=)lxNHE'
-        };
+        console.log(`Fetching incident: ${incidentNumber}`);
         
         const url = `${SERVICENOW_CONFIG.instance}/api/now/table/incident?sysparm_query=number=${incidentNumber}&sysparm_fields=short_description,number,state,sys_id`;
         const credentials = Buffer.from(`${SERVICENOW_CONFIG.username}:${SERVICENOW_CONFIG.password}`).toString('base64');

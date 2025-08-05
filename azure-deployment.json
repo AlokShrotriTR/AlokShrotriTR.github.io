@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "type": "string",
+      "defaultValue": "actr-proxy-server",
+      "metadata": {
+        "description": "Name of the web app"
+      }
+    },
+    "servicenowInstance": {
+      "type": "string",
+      "metadata": {
+        "description": "ServiceNow instance URL"
+      }
+    },
+    "servicenowUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "ServiceNow username"
+      }
+    },
+    "servicenowPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "ServiceNow password"
+      }
+    }
+  },
+  "variables": {
+    "appServicePlanName": "[concat(parameters('appName'), '-plan')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "F1",
+        "tier": "Free"
+      },
+      "properties": {
+        "reserved": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-02-01",
+      "name": "[parameters('appName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "siteConfig": {
+          "nodeVersion": "18-lts",
+          "appSettings": [
+            {
+              "name": "SERVICENOW_INSTANCE",
+              "value": "[parameters('servicenowInstance')]"
+            },
+            {
+              "name": "SERVICENOW_USERNAME",
+              "value": "[parameters('servicenowUsername')]"
+            },
+            {
+              "name": "SERVICENOW_PASSWORD",
+              "value": "[parameters('servicenowPassword')]"
+            },
+            {
+              "name": "NODE_TLS_REJECT_UNAUTHORIZED",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "appUrl": {
+      "type": "string",
+      "value": "[concat('https://', parameters('appName'), '.azurewebsites.net')]"
+    }
+  }
+}
